@@ -286,4 +286,4 @@ function Joistor(opts = { historyBuffer: 20, strict: false }) {
 	};
 }
 
-export { Joistor };
+export default Joistor;

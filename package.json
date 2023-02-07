@@ -23,7 +23,7 @@
 		"url": "https://github.com/michaelladouceur1/joistor/issues"
 	},
 	"homepage": "https://github.com/michaelladouceur1/joistor#readme",
-	"dependencies": {
+	"devDependencies": {
 		"joi": "^17.7.0"
 	}
 }

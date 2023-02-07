@@ -1,0 +1,29 @@
+{
+	"name": "joistor",
+	"version": "1.0.0",
+	"description": "A state management library utilizing Joi to provide state validation and other features",
+	"main": "state.js",
+	"type": "module",
+	"scripts": {
+		"test": "test"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/michaelladouceur1/joistor.git"
+	},
+	"keywords": [
+		"state",
+		"state",
+		"management",
+		"joi"
+	],
+	"author": "Michael LaDouceur",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/michaelladouceur1/joistor/issues"
+	},
+	"homepage": "https://github.com/michaelladouceur1/joistor#readme",
+	"dependencies": {
+		"joi": "^17.7.0"
+	}
+}

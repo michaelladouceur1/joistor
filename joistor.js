@@ -5,10 +5,8 @@ function Joistor(opts = { historyBuffer: 20, strict: false }) {
 
 	let schema = {};
 	let state = new Proxy({}, stateRegisterProxyHandler());
-	let history = {
-		undo: [],
-		redo: [],
-	};
+	let history = { undo: [], redo: [] };
+
 	let onChangeCallbacks = {};
 
 	// ========= Public API =========

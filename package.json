@@ -1,8 +1,8 @@
 {
 	"name": "joistor",
 	"version": "1.0.0",
-	"description": "A state management library utilizing Joi to provide state validation and other features",
-	"main": "state.js",
+	"description": "A state management library providing state validation and other features",
+	"main": "joistor.js",
 	"type": "module",
 	"scripts": {
 		"test": "mocha"
@@ -13,8 +13,6 @@
 	},
 	"keywords": [
 		"state",
-		"state",
-		"management",
 		"joi"
 	],
 	"author": "Michael LaDouceur",

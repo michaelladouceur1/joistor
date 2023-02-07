@@ -1,13 +1,20 @@
-import Joi from "joi";
-
-function Joistor(opts = { historyBuffer: 20, strict: false }) {
+function Joistor(opts = { historyBuffer: 20, strict: false, errorLog: true }) {
 	let updateHistory = false;
 
 	let schema = {};
 	let state = new Proxy({}, stateRegisterProxyHandler());
 	let history = { undo: [], redo: [] };
 
+	let onRegisterCallbacks = [];
+	let onUnregisterCallbacks = [];
 	let onChangeCallbacks = {};
+	let onErrorCallbacks = [
+		(error, state) => {
+			if (opts.errorLog) {
+				console.log(error);
+			}
+		},
+	];
 
 	// ========= Public API =========
 
@@ -24,6 +31,8 @@ function Joistor(opts = { historyBuffer: 20, strict: false }) {
 		schema[field] = schemaObj[field];
 		state[field] = stateObj[field];
 		updateHistory = true;
+
+		executeRegisterCallbacks();
 	}
 
 	/**
@@ -36,6 +45,16 @@ function Joistor(opts = { historyBuffer: 20, strict: false }) {
 	function unregister(field) {
 		delete schema[field];
 		delete state[field];
+
+		executeUnregisterCallbacks();
+	}
+
+	function onRegister(callback) {
+		onRegisterCallbacks.push(callback);
+	}
+
+	function onUnregister(callback) {
+		onUnregisterCallbacks.push(callback);
 	}
 
 	/**
@@ -48,6 +67,10 @@ function Joistor(opts = { historyBuffer: 20, strict: false }) {
 	function onChange(path, callback) {
 		if (!onChangeCallbacks[path]) onChangeCallbacks[path] = [];
 		onChangeCallbacks[path].push(callback);
+	}
+
+	function onError(callback) {
+		onErrorCallbacks.push(callback);
 	}
 
 	/**
@@ -111,8 +134,8 @@ function Joistor(opts = { historyBuffer: 20, strict: false }) {
 			obj[prop] = value;
 
 			// validate state with schema
-			const validatedState = validate(obj, prop);
-			if (!validatedState) {
+			const { error } = validate(obj, prop);
+			if (error) {
 				if (oldValue) {
 					obj[prop] = oldValue;
 				} else {
@@ -126,7 +149,7 @@ function Joistor(opts = { historyBuffer: 20, strict: false }) {
 			clearRedo();
 
 			// call onChange callbacks
-			executeCallbacks(prop);
+			executeChangeCallbacks(prop);
 
 			return true;
 		}
@@ -155,8 +178,8 @@ function Joistor(opts = { historyBuffer: 20, strict: false }) {
 			obj[prop] = value;
 
 			// validate state with schema
-			const validatedState = validate(state, baseProp);
-			if (!validatedState) {
+			const { error } = validate(state, baseProp);
+			if (error) {
 				// undo update
 				obj[prop] = oldValue;
 				return true;
@@ -167,7 +190,7 @@ function Joistor(opts = { historyBuffer: 20, strict: false }) {
 			clearRedo();
 
 			// call onChange callbacks
-			executeCallbacks(baseProp);
+			executeChangeCallbacks(baseProp, prop, value);
 
 			return true;
 		}
@@ -178,10 +201,22 @@ function Joistor(opts = { historyBuffer: 20, strict: false }) {
 		};
 	}
 
-	function executeCallbacks(prop) {
-		if (onChangeCallbacks[prop]) {
-			onChangeCallbacks[prop].forEach((callback) => callback(state, prop, state[prop]));
+	function executeRegisterCallbacks() {
+		onRegisterCallbacks.forEach((callback) => callback(state));
+	}
+
+	function executeUnregisterCallbacks() {
+		onUnregisterCallbacks.forEach((callback) => callback(state));
+	}
+
+	function executeChangeCallbacks(baseProp, prop, value) {
+		if (onChangeCallbacks[baseProp]) {
+			onChangeCallbacks[baseProp].forEach((callback) => callback(state, baseProp, state[baseProp], prop, value));
 		}
+	}
+
+	function executeValidationErrorCallbacks(error) {
+		onErrorCallbacks.forEach((callback) => callback(error, state));
 	}
 
 	function updateUndoRedoState(newState) {
@@ -251,14 +286,12 @@ function Joistor(opts = { historyBuffer: 20, strict: false }) {
 			valid = schema[field].validate(obj[field]);
 		}
 
-		const { error, value } = valid;
-
-		if (error) {
-			console.log(error);
-			return;
+		if (valid.error) {
+			executeValidationErrorCallbacks(valid.error);
 		}
 
-		return value;
+		// returns { error, value }
+		return valid;
 	}
 
 	function stateFields(obj, fields = []) {
@@ -278,7 +311,10 @@ function Joistor(opts = { historyBuffer: 20, strict: false }) {
 		history,
 		register,
 		unregister,
+		onRegister,
+		onUnregister,
 		onChange,
+		onError,
 		undo,
 		redo,
 	};

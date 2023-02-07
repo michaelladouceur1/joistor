@@ -5,7 +5,7 @@
 	"main": "state.js",
 	"type": "module",
 	"scripts": {
-		"test": "test"
+		"test": "mocha"
 	},
 	"repository": {
 		"type": "git",
@@ -24,6 +24,7 @@
 	},
 	"homepage": "https://github.com/michaelladouceur1/joistor#readme",
 	"devDependencies": {
-		"joi": "^17.7.0"
+		"joi": "^17.7.0",
+		"mocha": "^10.2.0"
 	}
 }

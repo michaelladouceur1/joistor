@@ -1,5 +1,5 @@
 {
-	"name": "joistor",
+	"name": "@michaelladouceur/joistor",
 	"version": "1.0.0",
 	"description": "A state management library providing state validation and other features",
 	"main": "joistor.js",
@@ -21,6 +21,9 @@
 		"url": "https://github.com/michaelladouceur1/joistor/issues"
 	},
 	"homepage": "https://github.com/michaelladouceur1/joistor#readme",
+	"directories": {
+		"test": "test"
+	},
 	"devDependencies": {
 		"joi": "^17.7.0",
 		"mocha": "^10.2.0"

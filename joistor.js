@@ -86,7 +86,7 @@ function Joistor(opts = { historyBuffer: 20, strict: false, errorLog: true }) {
 		const { removeUndo } = updateUndoHistory();
 		const { addRedo } = updateRedoHistory(state);
 
-		const prevState = history.undo.pop();
+		const prevState = removeUndo();
 		addRedo();
 
 		updateUndoRedoState(prevState);

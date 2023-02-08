@@ -18,6 +18,16 @@ const DEFAULT_SCHEMA_WORKSPACE = {
 	}),
 };
 
+const DEFAULT_SCHEMA_LIST = {
+	list: Joi.array().items(
+		Joi.object({
+			min: Joi.number().required(),
+			max: Joi.number().required(),
+			position: Joi.number().required(),
+		})
+	),
+};
+
 const SYSTEM_STATE_1 = { id: 0, name: "" };
 const SYSTEM_STATE_2 = { id: 1, name: "test" };
 const SYSTEM_STATE_3 = { id: 1, name: "test2" };
@@ -25,6 +35,29 @@ const SYSTEM_STATE_3 = { id: 1, name: "test2" };
 const WORKSPACE_STATE_1 = { id: 0, name: "", sequence: [] };
 const WORKSPACE_STATE_2 = { id: 1, name: "test", sequence: [0, 1] };
 const WORKSPACE_STATE_3 = { id: 1, name: "test", sequence: [0, 1, 2, 3, 4, 5] };
+
+const LIST_STATE_1 = [
+	{
+		min: 0,
+		max: 100,
+		position: 42,
+	},
+	{
+		min: 0,
+		max: 200,
+		position: 160,
+	},
+	{
+		min: 0,
+		max: 500,
+		position: 17,
+	},
+	{
+		min: 0,
+		max: 250,
+		position: 246,
+	},
+];
 
 const INVALID_SYSTEM_STATE_1 = { id: "invalid", name: "" };
 
@@ -109,6 +142,13 @@ describe("Joistor", () => {
 		store.state.system = { ...SYSTEM_STATE_1 };
 		deepStrictEqual(store.state.system, SYSTEM_STATE_1);
 		deepStrictEqual(store.state, { system: { ...SYSTEM_STATE_1 }, workspace: { ...WORKSPACE_STATE_3 } });
+	});
+
+	it("updates array state", () => {
+		store.register(DEFAULT_SCHEMA_SYSTEM, { system: SYSTEM_STATE_1 });
+		store.register(DEFAULT_SCHEMA_WORKSPACE, { workspace: WORKSPACE_STATE_1 });
+		store.register(DEFAULT_SCHEMA_LIST, { list: LIST_STATE_1 });
+		deepStrictEqual(store.state, { system: { ...SYSTEM_STATE_1 }, workspace: { ...WORKSPACE_STATE_1 }, list: { ...LIST_STATE_1 } });
 	});
 
 	it("state is not updated when invalid", () => {

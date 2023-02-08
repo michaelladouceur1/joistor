@@ -32,7 +32,7 @@ function Joistor(opts = { historyBuffer: 20, strict: false, errorLog: true }) {
 		state[field] = stateObj[field];
 		updateHistory = true;
 
-		executeRegisterCallbacks();
+		executeRegisterCallbacks(field);
 	}
 
 	/**
@@ -46,29 +46,57 @@ function Joistor(opts = { historyBuffer: 20, strict: false, errorLog: true }) {
 		delete schema[field];
 		delete state[field];
 
-		executeUnregisterCallbacks();
+		executeUnregisterCallbacks(field);
 	}
 
+	/**
+	 * Add callbacks to be executed after a field is registered
+	 * @param {function} callback - callback function to be executed after registering a field
+	 * @param {*} callback.field - field being registered
+	 * @param {*} callback.state - state after registering field
+	 * @example
+	 * onRegister((field, state) => console.log(`${field} has been registered`))
+	 */
 	function onRegister(callback) {
 		onRegisterCallbacks.push(callback);
 	}
 
+	/**
+	 * Add callbacks to be executed after a field is unregistered
+	 * @param {function} callback - callback function to be executed after unregistering a field
+	 * @param {*} callback.field - field being unregistered
+	 * @param {*} callback.state - state after unregistering field
+	 * @example
+	 * onUnregister((field, state) => console.log(`${field} has been removed`))
+	 */
 	function onUnregister(callback) {
 		onUnregisterCallbacks.push(callback);
 	}
 
 	/**
-	 *
+	 * Add callbacks to be executed after a change occurs
 	 * @param {string} path - path to the uppermost state field to listen to
 	 * @param {function} callback - callback function to call when the field is updated
+	 * @param {*} callback.state - state after change occurs
+	 * @param {*} callback.field - field that was changed
+	 * @param {*} callback.prop - property of the field that was changed
+	 * @param {*} callback.value - value that the property was changed to
 	 * @example
-	 * onChange("user", () => console.log("user has been updated"))
+	 * onChange("user", (state, field, prop, value) => console.log(`${prop} of ${field} was updated to ${value}`))
 	 */
 	function onChange(path, callback) {
 		if (!onChangeCallbacks[path]) onChangeCallbacks[path] = [];
 		onChangeCallbacks[path].push(callback);
 	}
 
+	/**
+	 * Add callbacks to be executed after an error occurs
+	 * @param {function} callback - callback function to be executed after unregistering a field
+	 * @param {*} callback.error - error message
+	 * @param {*} callback.state - state after error occurred
+	 * @example
+	 * onError((error, state) => logger.error(`Error: ${error} (State: ${state})))
+	 */
 	function onError(callback) {
 		onErrorCallbacks.push(callback);
 	}
@@ -79,6 +107,7 @@ function Joistor(opts = { historyBuffer: 20, strict: false, errorLog: true }) {
 	 * store.state.user.name = "John Doe"
 	 * store.state.user.name = "Jane Doe"
 	 * undo()
+	 * console.log(store.state.user.name) ==> "John Doe"
 	 */
 	function undo() {
 		if (history.undo.length === 0) return;
@@ -98,7 +127,9 @@ function Joistor(opts = { historyBuffer: 20, strict: false, errorLog: true }) {
 	 * store.state.user.name = "John Doe"
 	 * store.state.user.name = "Jane Doe"
 	 * undo()
+	 * console.log(store.state.user.name) ==> "John Doe"
 	 * redo()
+	 * console.log(store.state.user.name) ==> "Jane Doe"
 	 */
 	function redo() {
 		if (history.redo.length === 0) return;
@@ -141,6 +172,7 @@ function Joistor(opts = { historyBuffer: 20, strict: false, errorLog: true }) {
 				} else {
 					delete obj[prop];
 				}
+				executeValidationErrorCallbacks(valid.error);
 				return true;
 			}
 
@@ -182,6 +214,7 @@ function Joistor(opts = { historyBuffer: 20, strict: false, errorLog: true }) {
 			if (error) {
 				// undo update
 				obj[prop] = oldValue;
+				executeValidationErrorCallbacks(valid.error);
 				return true;
 			}
 
@@ -201,17 +234,17 @@ function Joistor(opts = { historyBuffer: 20, strict: false, errorLog: true }) {
 		};
 	}
 
-	function executeRegisterCallbacks() {
-		onRegisterCallbacks.forEach((callback) => callback(state));
+	function executeRegisterCallbacks(field) {
+		onRegisterCallbacks.forEach((callback) => callback(field, state));
 	}
 
-	function executeUnregisterCallbacks() {
-		onUnregisterCallbacks.forEach((callback) => callback(state));
+	function executeUnregisterCallbacks(field) {
+		onUnregisterCallbacks.forEach((callback) => callback(field, state));
 	}
 
-	function executeChangeCallbacks(baseProp, prop, value) {
-		if (onChangeCallbacks[baseProp]) {
-			onChangeCallbacks[baseProp].forEach((callback) => callback(state, baseProp, state[baseProp], prop, value));
+	function executeChangeCallbacks(field, prop, value) {
+		if (onChangeCallbacks[field]) {
+			onChangeCallbacks[field].forEach((callback) => callback(state, field, prop, value));
 		}
 	}
 
@@ -284,10 +317,6 @@ function Joistor(opts = { historyBuffer: 20, strict: false, errorLog: true }) {
 			valid = schema[field].strict().validate(obj[field]);
 		} else {
 			valid = schema[field].validate(obj[field]);
-		}
-
-		if (valid.error) {
-			executeValidationErrorCallbacks(valid.error);
 		}
 
 		// returns { error, value }

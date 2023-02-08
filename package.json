@@ -1,5 +1,5 @@
 {
-	"name": "@michaelladouceur/joistor",
+	"name": "joistor",
 	"version": "1.0.0",
 	"description": "A state management library providing state validation and other features",
 	"main": "joistor.js",

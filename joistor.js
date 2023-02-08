@@ -1,4 +1,12 @@
-function Joistor(opts = { historyBuffer: 20, strict: false, errorLog: true }) {
+/**
+ * Function for creating a new Joistor object
+ * @param {object} opts - options for configuring joistor object
+ * @param {boolean} opts.errorLog - flag for setting if default errors are logged
+ * @param {number} opts.historyBuffer - max number of states to store in history
+ * @param {boolean} opts.strict - flag for setting type casting during validation checks
+ * @returns
+ */
+function Joistor(opts = { errorLog: true, historyBuffer: 20, strict: false }) {
 	let updateHistory = false;
 
 	let schema = {};
